@@ -1,0 +1,5 @@
+include LICENSE
+include README.md
+include mejurix_medicallegal_embedder/pretrained/README.md
+recursive-include mejurix_medicallegal_embedder/pretrained *.json *.pt
+recursive-include mejurix_medicallegal_embedder/pretrained/bert_model *.bin *.json *.txt 
