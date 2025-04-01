@@ -74,10 +74,80 @@ The Mejurix model particularly excels in cross-domain relationships such as MEDI
 
 ![Model Comparison by Relationship Type](./model_relationship_comparison.png)
 
-## Installation
+## How to Use This Model
 
-```bash
-pip install mejurix-medicallegal-embedder
+This model is directly available on the Hugging Face Hub and can be used with the Transformers library for feature extraction, sentence embeddings, and similarity calculations.
+
+### Basic Usage with Transformers
+
+```python
+import torch
+from transformers import AutoModel, AutoTokenizer
+
+# Load model and tokenizer
+model_name = "mejurix/medical-legal-embedder"  # The model's actual path on Hugging Face Hub
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+# Generate embeddings for a single text
+text = "The patient was diagnosed with L3 vertebral fracture, and a compensation claim is in progress."
+inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+with torch.no_grad():
+    outputs = model(**inputs)
+
+# Use the [CLS] token embedding for sentence representation
+embeddings = outputs.last_hidden_state[:, 0, :]  # [CLS] token
+print(f"Embedding shape: {embeddings.shape}")  # Should be [1, 256]
+```
+
+### Using the Model for Similarity Calculation
+
+```python
+import torch
+import torch.nn.functional as F
+from transformers import AutoModel, AutoTokenizer
+
+# Load model and tokenizer
+model_name = "mejurix/medical-legal-embedder"  # The model's actual path on Hugging Face Hub
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def get_embedding(text):
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :]  # [CLS] token embedding
+
+def compute_similarity(text1, text2):
+    emb1 = get_embedding(text1)
+    emb2 = get_embedding(text2)
+    return F.cosine_similarity(emb1, emb2).item()
+
+# Example
+text1 = "Diagnosed with L3 spinal fracture."
+text2 = "Compensation is needed for lumbar injury."
+similarity = compute_similarity(text1, text2)
+print(f"Similarity: {similarity:.4f}")
+```
+
+### Using with Hugging Face Pipelines
+
+```python
+from transformers import pipeline
+
+# Create a feature-extraction pipeline
+extractor = pipeline(
+    "feature-extraction",
+    model="mejurix/medical-legal-embedder",  # The model's actual path on Hugging Face Hub
+    tokenizer="mejurix/medical-legal-embedder"
+)
+
+# Extract features
+text = "The patient requires physical therapy following spinal surgery."
+features = extractor(text)
+
+# The output is a nested list with shape [1, sequence_length, hidden_size]
 ```
 
 ## Intended Uses & Limitations
@@ -113,83 +183,6 @@ The model was fine-tuned on a specialized dataset containing medical-legal docum
 - Weight decay: 0.1
 - Triplet margin: 2.0
 - Epochs: 15
-
-
-## Usage
-
-This model is compatible with the Hugging Face Transformers library. You can use it for feature extraction, sentence embeddings, and similarity calculations.
-
-### Basic Usage with Transformers
-
-```python
-import torch
-from transformers import AutoModel, AutoTokenizer
-
-# Load model and tokenizer
-model_name = "mejurix/medical-legal-embedder"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
-
-# Generate embeddings for a single text
-text = "The patient was diagnosed with L3 vertebral fracture, and a compensation claim is in progress."
-inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
-
-with torch.no_grad():
-    outputs = model(**inputs)
-
-# Use the [CLS] token embedding for sentence representation
-embeddings = outputs.last_hidden_state[:, 0, :]  # [CLS] token
-print(f"Embedding shape: {embeddings.shape}")  # Should be [1, 256]
-```
-
-### Using the Model for Similarity Calculation
-
-```python
-import torch
-import torch.nn.functional as F
-from transformers import AutoModel, AutoTokenizer
-
-# Load model and tokenizer
-model_name = "mejurix/medical-legal-embedder"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
-
-def get_embedding(text):
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    return outputs.last_hidden_state[:, 0, :]  # [CLS] token embedding
-
-def compute_similarity(text1, text2):
-    emb1 = get_embedding(text1)
-    emb2 = get_embedding(text2)
-    return F.cosine_similarity(emb1, emb2).item()
-
-# Example
-text1 = "Diagnosed with L3 spinal fracture."
-text2 = "Compensation is needed for lumbar injury."
-similarity = compute_similarity(text1, text2)
-print(f"Similarity: {similarity:.4f}")
-```
-
-### Using with Hugging Face Pipelines
-
-```python
-from transformers import pipeline
-
-# Create a feature-extraction pipeline
-extractor = pipeline(
-    "feature-extraction",
-    model="mejurix/medical-legal-embedder",
-    tokenizer="mejurix/medical-legal-embedder"
-)
-
-# Extract features
-text = "The patient requires physical therapy following spinal surgery."
-features = extractor(text)
-
-# The output is a nested list with shape [1, sequence_length, hidden_size]
-```
 
 ## Citation
 
@@ -270,10 +263,80 @@ Mejurix 모델은 특히 MEDICAL_SIMILAR_LEGAL_DIFFERENT(0.9936)와 SEVERITY_COM
 
 ![관계 유형별 모델 비교](./model_relationship_comparison.png)
 
-## 설치 방법
+## 모델 사용 방법
 
-```bash
-pip install mejurix-medicallegal-embedder
+이 모델은 Hugging Face Hub에서 직접 사용 가능하며, Transformers 라이브러리를 통해 특성 추출, 문장 임베딩 및 유사도 계산에 활용할 수 있습니다.
+
+### Transformers를 사용한 기본 사용법
+
+```python
+import torch
+from transformers import AutoModel, AutoTokenizer
+
+# 모델 및 토크나이저 로드
+model_name = "mejurix/medical-legal-embedder"  # Hugging Face Hub에 있는 실제 모델 경로
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+# 단일 텍스트에 대한 임베딩 생성
+text = "환자는 L3 척추 골절 진단을 받았으며, 보상 청구가 진행 중입니다."
+inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+with torch.no_grad():
+    outputs = model(**inputs)
+
+# 문장 표현에 [CLS] 토큰 임베딩 사용
+embeddings = outputs.last_hidden_state[:, 0, :]  # [CLS] 토큰
+print(f"임베딩 형태: {embeddings.shape}")  # [1, 256]이어야 함
+```
+
+### 유사도 계산에 모델 사용하기
+
+```python
+import torch
+import torch.nn.functional as F
+from transformers import AutoModel, AutoTokenizer
+
+# 모델 및 토크나이저 로드
+model_name = "mejurix/medical-legal-embedder"  # Hugging Face Hub에 있는 실제 모델 경로
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def get_embedding(text):
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :]  # [CLS] 토큰 임베딩
+
+def compute_similarity(text1, text2):
+    emb1 = get_embedding(text1)
+    emb2 = get_embedding(text2)
+    return F.cosine_similarity(emb1, emb2).item()
+
+# 예시
+text1 = "L3 척추 골절 진단을 받았습니다."
+text2 = "요추 부상에 대한 보상이 필요합니다."
+similarity = compute_similarity(text1, text2)
+print(f"유사도: {similarity:.4f}")
+```
+
+### Hugging Face 파이프라인 사용하기
+
+```python
+from transformers import pipeline
+
+# 특성 추출 파이프라인 생성
+extractor = pipeline(
+    "feature-extraction",
+    model="mejurix/medical-legal-embedder",  # Hugging Face Hub에 있는 실제 모델 경로
+    tokenizer="mejurix/medical-legal-embedder"
+)
+
+# 특성 추출
+text = "환자는 척추 수술 후 물리 치료가 필요합니다."
+features = extractor(text)
+
+# 출력은 [1, sequence_length, hidden_size] 형태의 중첩된 리스트
 ```
 
 ## 활용 분야 및 한계점
@@ -310,82 +373,6 @@ pip install mejurix-medicallegal-embedder
 - 트리플렛 마진: 2.0
 - 에폭: 15
 
-## 사용 방법
-
-이 모델은 Hugging Face Transformers 라이브러리와 호환됩니다. 특성 추출, 문장 임베딩 및 유사도 계산에 사용할 수 있습니다.
-
-### Transformers를 사용한 기본 사용법
-
-```python
-import torch
-from transformers import AutoModel, AutoTokenizer
-
-# 모델 및 토크나이저 로드
-model_name = "mejurix/medical-legal-embedder"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
-
-# 단일 텍스트에 대한 임베딩 생성
-text = "환자는 L3 척추 골절 진단을 받았으며, 보상 청구가 진행 중입니다."
-inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
-
-with torch.no_grad():
-    outputs = model(**inputs)
-
-# 문장 표현에 [CLS] 토큰 임베딩 사용
-embeddings = outputs.last_hidden_state[:, 0, :]  # [CLS] 토큰
-print(f"임베딩 형태: {embeddings.shape}")  # [1, 256]이어야 함
-```
-
-### 유사도 계산에 모델 사용하기
-
-```python
-import torch
-import torch.nn.functional as F
-from transformers import AutoModel, AutoTokenizer
-
-# 모델 및 토크나이저 로드
-model_name = "mejurix/medical-legal-embedder"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
-
-def get_embedding(text):
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    return outputs.last_hidden_state[:, 0, :]  # [CLS] 토큰 임베딩
-
-def compute_similarity(text1, text2):
-    emb1 = get_embedding(text1)
-    emb2 = get_embedding(text2)
-    return F.cosine_similarity(emb1, emb2).item()
-
-# 예시
-text1 = "L3 척추 골절 진단을 받았습니다."
-text2 = "요추 부상에 대한 보상이 필요합니다."
-similarity = compute_similarity(text1, text2)
-print(f"유사도: {similarity:.4f}")
-```
-
-### Hugging Face 파이프라인 사용하기
-
-```python
-from transformers import pipeline
-
-# 특성 추출 파이프라인 생성
-extractor = pipeline(
-    "feature-extraction",
-    model="mejurix/medical-legal-embedder",
-    tokenizer="mejurix/medical-legal-embedder"
-)
-
-# 특성 추출
-text = "환자는 척추 수술 후 물리 치료가 필요합니다."
-features = extractor(text)
-
-# 출력은 [1, sequence_length, hidden_size] 형태의 중첩된 리스트
-```
-
 ## 인용
 
 학술 연구에서 이 모델을 사용하는 경우 다음과 같이 인용해 주세요:
@@ -402,4 +389,4 @@ features = extractor(text)
 
 ## 라이선스
 
-이 프로젝트는 MIT 라이선스에 따라 배포됩니다. 자세한 내용은 LICENSE 파일을 참조하세요. 
+이 프로젝트는 MIT 라이선스에 따라 배포됩니다. 
