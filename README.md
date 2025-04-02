@@ -20,6 +20,8 @@ pipeline_tag: feature-extraction
 # Mejurix Medical-Legal Embedding Model
 
 This model is a fine-tuned Transformer (BERT-based) that generates high-quality embeddings for documents in medical and legal domains, with a focus on capturing the semantic relationships between medical and legal concepts. The model leverages NER (Named Entity Recognition) to better understand domain-specific entities and their relationships.
+Explore the model on Hugging Face:
+👉 https://huggingface.co/mejurix/medical-legal-embedder
 
 ## Model Description
 
